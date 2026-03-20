@@ -1,7 +1,7 @@
 {
   "name": "dev-game-tochka",
   "version": "1.0.0",
-  "homepage": "./",
+  "homepage": "https://usunrise88.github.io/thegame",
   "private": true,
   "dependencies": {
     "@types/node": "^18.19.0",
