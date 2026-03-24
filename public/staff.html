@@ -490,8 +490,15 @@ document.getElementById('pin-input').addEventListener('keydown', e => {
 });
 async function api(action, extra = {}) {
   const p = new URLSearchParams({ action, ...extra });
-  const res = await fetch(API_URL + '?' + p.toString());
-  return res.json();
+  const url = API_URL + '?' + p.toString();
+  const res = await fetch(url, { redirect: 'follow' });
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('API response is not JSON:', text.substring(0, 200));
+    throw new Error('Invalid API response');
+  }
 }
 async function loadConfig() {
   if (!config) {

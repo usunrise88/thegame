@@ -341,7 +341,7 @@ body {
 // ============================================================
 // НАСТРОЙКА: вставьте URL вашего Apps Script
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycby-NkEsjwUjfdQnKTxR1FqEEMljgg2PxO2ZhpQ9ZnlxQTOkaeadHQmgzxcPEXw82kI0/exec';
+const API_URL = 'Вhttps://script.google.com/macros/s/AKfycby-NkEsjwUjfdQnKTxR1FqEEMljgg2PxO2ZhpQ9ZnlxQTOkaeadHQmgzxcPEXw82kI0/exec';
 // Пример: 'https://script.google.com/macros/s/AKfycb.../exec'
 // URL страницы с игрой на Тильде
 const GAME_URL = 'https://usunrise88.github.io/thegame/';
@@ -356,19 +356,34 @@ if (!participantId) {
 }
 async function api(action, extra = {}) {
   const p = new URLSearchParams({ action, ...extra });
-  const res = await fetch(API_URL + '?' + p.toString());
-  return res.json();
+  const url = API_URL + '?' + p.toString();
+  const res = await fetch(url, { redirect: 'follow' });
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('API response is not JSON:', text.substring(0, 200));
+    throw new Error('Invalid API response');
+  }
 }
 async function loadPassport() {
   try {
     const data = await api('getParticipant', { id: participantId });
     if (data.error) {
-      showError('Паспорт не найден', 'Участник с таким ID не зарегистрирован');
+      showError('Паспорт не найден', 'Участник с таким ID не зарегистрирован. ID: ' + participantId);
       return;
     }
     renderPassport(data.participant);
   } catch (e) {
-    showError('Ошибка загрузки', 'Проверьте подключение к интернету и попробуйте обновить страницу');
+    console.error('loadPassport error:', e);
+    // Google Apps Script иногда долго «просыпается» — пробуем ещё раз
+    if (!window._retried) {
+      window._retried = true;
+      document.querySelector('.loading-text').textContent = 'Сервер просыпается, ещё секунду...';
+      setTimeout(loadPassport, 3000);
+    } else {
+      showError('Ошибка загрузки', 'Не удалось подключиться к серверу. Попробуйте обновить страницу (потяните вниз). Если не поможет — проверьте, что API_URL в файле passport.html указан правильно.');
+    }
   }
 }
 function renderPassport(p) {
@@ -389,15 +404,25 @@ function renderPassport(p) {
   // QR
   const qrDiv = document.getElementById('qr');
   const passUrl = window.location.origin + window.location.pathname + '?id=' + p.id;
-  QRCode.toCanvas(document.createElement('canvas'), passUrl, {
-    width: 360, margin: 0,
-    color: { dark: '#1A1A18', light: '#FFFFFF' }
-  }, function(err, canvas) {
-    if (!err) {
-      qrDiv.innerHTML = '';
-      qrDiv.appendChild(canvas);
+  try {
+    if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+      QRCode.toCanvas(document.createElement('canvas'), passUrl, {
+        width: 360, margin: 0,
+        color: { dark: '#1A1A18', light: '#FFFFFF' }
+      }, function(err, canvas) {
+        if (!err) {
+          qrDiv.innerHTML = '';
+          qrDiv.appendChild(canvas);
+        } else {
+          qrFallback(qrDiv, p.id);
+        }
+      });
+    } else {
+      qrFallback(qrDiv, p.id);
     }
-  });
+  } catch (e) {
+    qrFallback(qrDiv, p.id);
+  }
   // Balance
   document.getElementById('balance').textContent = p.balance;
   const detail = [];
@@ -468,6 +493,12 @@ async function claimCoins() {
 }
 function goToGame() {
   window.location.href = GAME_URL + '?id=' + participantId;
+}
+function qrFallback(container, id) {
+  // Используем бесплатный API для генерации QR как картинки
+  const qrUrl = window.location.origin + window.location.pathname + '?id=' + id;
+  const apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(qrUrl);
+  container.innerHTML = '<img src="' + apiUrl + '" alt="QR-код" style="width:180px;height:180px;image-rendering:pixelated">';
 }
 function formatTime(iso) {
   try {
