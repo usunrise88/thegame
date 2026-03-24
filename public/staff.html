@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Панель стендиста</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root {
+  --bg: #F6F5F0;
+  --card: #FFFFFF;
+  --text: #1A1A18;
+  --text2: #6B6A65;
+  --text3: #9C9B95;
+  --border: rgba(0,0,0,0.06);
+  --accent: #4A3AFF;
+  --accent-soft: #EEEDFE;
+  --accent-text: #3429B3;
+  --green: #0F6E56;
+  --green-soft: #E1F5EE;
+  --green-text: #085041;
+  --amber: #854F0B;
+  --amber-soft: #FEF6E0;
+  --red: #A32D2D;
+  --red-soft: #FCEBEB;
+  --red-text: #791F1F;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Manrope', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+.container {
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+/* ---- PIN SCREEN ---- */
+.pin-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 90dvh;
+  gap: 16px;
+  padding: 32px;
+}
+.pin-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.pin-sub {
+  font-size: 14px;
+  color: var(--text2);
+  text-align: center;
+}
+.pin-input {
+  width: 200px;
+  padding: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 8px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.pin-input:focus { border-color: var(--accent); }
+.pin-input.error { border-color: var(--red); animation: shake 0.4s; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)}
+}
+.pin-btn {
+  width: 200px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.pin-btn:hover { opacity: 0.9; }
+.pin-btn:active { transform: scale(0.98); }
+.pin-error-msg {
+  font-size: 13px;
+  color: var(--red);
+  height: 20px;
+}
+/* ---- STATION SELECT ---- */
+.station-screen { display: none; }
+.station-screen.visible { display: block; }
+.station-header {
+  text-align: center;
+  padding: 40px 0 24px;
+}
+.station-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+.station-sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+.station-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.station-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Manrope', sans-serif;
+  text-align: left;
+  width: 100%;
+}
+.station-btn:hover { border-color: var(--accent); }
+.station-btn:active { transform: scale(0.98); }
+.station-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.station-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+.station-desc {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+/* ---- MAIN PANEL ---- */
+.panel { display: none; }
+.panel.visible { display: block; }
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+}
+.panel-station {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.panel-station-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+.panel-change {
+  font-size: 12px;
+  color: var(--text3);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+}
+/* Scanner */
+.scanner-area {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.scanner-placeholder {
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+}
+.scanner-placeholder:hover { background: rgba(0,0,0,0.01); }
+.scan-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 24px;
+}
+.scan-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.scan-hint {
+  font-size: 13px;
+  color: var(--text3);
+}
+#qr-reader { display: none; }
+#qr-reader video { border-radius: var(--radius) var(--radius) 0 0; }
+/* Manual input */
+.manual-input-wrap {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+.manual-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  outline: none;
+  background: var(--bg);
+}
+.manual-input:focus { border-color: var(--accent); }
+.manual-btn {
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+/* Participant profile */
+.profile { display: none; }
+.profile.visible { display: block; }
+.profile-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+.profile-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.profile-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: #E6F1FB;
+  color: #0C447C;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 700;
+  flex-shrink: 0;
+}
+.profile-name { font-size: 17px; font-weight: 600; }
+.profile-email { font-size: 12px; color: var(--text3); }
+.profile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+.profile-label { color: var(--text2); }
+.profile-val { font-weight: 600; }
+.profile-val.done { color: var(--green); }
+.profile-val.not { color: var(--text3); }
+.profile-val.warn { color: var(--red); }
+/* Alert */
+.alert {
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  display: none;
+  line-height: 1.5;
+}
+.alert.visible { display: block; }
+.alert.ok { background: var(--green-soft); color: var(--green-text); }
+.alert.warn { background: var(--red-soft); color: var(--red-text); }
+.alert.info { background: var(--amber-soft); color: var(--amber); }
+/* Action buttons */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.act-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.act-btn:active { transform: scale(0.98); }
+.act-btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+.act-btn.primary:hover { opacity: 0.9; }
+.act-btn.secondary {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.act-btn.disabled {
+  background: var(--bg);
+  color: var(--text3);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.act-btn.done-btn {
+  background: var(--green-soft);
+  color: var(--green-text);
+  pointer-events: none;
+}
+.act-btn.merch-btn { background: var(--accent-soft); color: var(--accent-text); }
+.act-btn.merch-btn:hover { opacity: 0.9; }
+.act-btn.merch-disabled {
+  background: var(--bg);
+  color: var(--text3);
+  pointer-events: none;
+}
+.next-btn {
+  text-align: center;
+  padding: 12px;
+  font-size: 14px;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 600;
+  background: none;
+  border: none;
+  width: 100%;
+  font-family: 'Manrope', sans-serif;
+}
+/* Stats */
+.stats-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+}
+.stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- PIN Screen -->
+  <div class="pin-screen" id="pin-screen">
+    <div class="pin-title">Панель стендиста</div>
+    <div class="pin-sub">Введите PIN-код для доступа</div>
+    <input type="password" class="pin-input" id="pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+    <button class="pin-btn" onclick="submitPin()">Войти</button>
+    <div class="pin-error-msg" id="pin-error"></div>
+  </div>
+  <!-- Station Select -->
+  <div class="station-screen" id="station-screen">
+    <div class="station-header">
+      <div class="station-title">Выберите вашу точку</div>
+      <div class="station-sub">Это определяет, что вы будете начислять</div>
+    </div>
+    <div class="station-grid" id="station-grid"></div>
+  </div>
+  <!-- Main Panel -->
+  <div class="panel" id="panel">
+    <div class="panel-header">
+      <div class="panel-station">
+        <span class="panel-badge">Стендист</span>
+        <span class="panel-station-name" id="panel-station-name"></span>
+      </div>
+      <button class="panel-change" onclick="changeStation()">Сменить</button>
+    </div>
+    <!-- Scanner -->
+    <div class="scanner-area" id="scanner-area">
+      <div id="qr-reader"></div>
+      <div class="scanner-placeholder" id="scan-placeholder" onclick="startScanner()">
+        <div class="scan-icon">📷</div>
+        <div class="scan-title">Сканировать QR участника</div>
+        <div class="scan-hint">Нажмите, чтобы открыть камеру</div>
+      </div>
+      <div class="manual-input-wrap">
+        <input class="manual-input" id="manual-id" placeholder="или введите ID вручную">
+        <button class="manual-btn" onclick="manualLookup()">Найти</button>
+      </div>
+    </div>
+    <!-- Participant Profile -->
+    <div class="profile" id="profile">
+      <div class="profile-card" id="profile-card"></div>
+      <div class="alert" id="alert"></div>
+      <div class="actions" id="actions"></div>
+      <button class="next-btn" onclick="nextParticipant()">← Следующий участник</button>
+    </div>
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-served">0</div>
+        <div class="stat-label">Обслужено</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-coins">0</div>
+        <div class="stat-label">Монет выдано</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-repeat">0</div>
+        <div class="stat-label">Повторных</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ============================================================
+// НАСТРОЙКА: вставьте URL вашего Apps Script
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycby-NkEsjwUjfdQnKTxR1FqEEMljgg2PxO2ZhpQ9ZnlxQTOkaeadHQmgzxcPEXw82kI0/exec';
+// ============================================================
+let staffPin = '';
+let currentStation = null;
+let currentParticipant = null;
+let config = null;
+let scanner = null;
+let sessionStats = { served: 0, coins: 0, repeats: 0 };
+// Check saved session
+const savedPin = sessionStorage.getItem('staffPin');
+const savedStation = sessionStorage.getItem('station');
+if (savedPin) {
+  staffPin = savedPin;
+  if (savedStation) {
+    loadConfig().then(() => {
+      currentStation = JSON.parse(savedStation);
+      showPanel();
+    });
+  } else {
+    loadConfig().then(() => showStationSelect());
+  }
+}
+// PIN entry on Enter
+document.getElementById('pin-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitPin();
+});
+async function api(action, extra = {}) {
+  const p = new URLSearchParams({ action, ...extra });
+  const res = await fetch(API_URL + '?' + p.toString());
+  return res.json();
+}
+async function loadConfig() {
+  if (!config) {
+    const data = await api('getConfig');
+    config = data;
+  }
+}
+// ---- PIN ----
+async function submitPin() {
+  const input = document.getElementById('pin-input');
+  const pin = input.value.trim();
+  if (!pin) return;
+  try {
+    const data = await api('verifyPin', { staffPin: pin });
+    if (data.valid) {
+      staffPin = pin;
+      sessionStorage.setItem('staffPin', pin);
+      await loadConfig();
+      showStationSelect();
+    } else {
+      input.classList.add('error');
+      document.getElementById('pin-error').textContent = 'Неверный PIN-код';
+      setTimeout(() => input.classList.remove('error'), 400);
+    }
+  } catch (e) {
+    document.getElementById('pin-error').textContent = 'Ошибка сети';
+  }
+}
+// ---- STATION SELECT ----
+function showStationSelect() {
+  document.getElementById('pin-screen').style.display = 'none';
+  document.getElementById('station-screen').classList.add('visible');
+  document.getElementById('panel').classList.remove('visible');
+  const grid = document.getElementById('station-grid');
+  const stations = [];
+  // Activity stations
+  (config.activities || []).forEach(a => {
+    stations.push({
+      id: a.id, type: 'activity', name: a.name,
+      desc: '+' + a.coins + ' монет за прохождение',
+      icon: '🎯', iconBg: var_amber_soft()
+    });
+  });
+  // Online game station
+  stations.push({
+    id: 'game', type: 'game', name: 'Онлайн-игра',
+    desc: 'Просмотр результатов, помощь участникам',
+    icon: '🎮', iconBg: '#FBEAF0'
+  });
+  // Merch station
+  stations.push({
+    id: 'merch', type: 'merch', name: 'Точка мерча',
+    desc: 'Выдача мерча за монеты',
+    icon: '🎁', iconBg: '#E1F5EE'
+  });
+  grid.innerHTML = stations.map(s =>
+    '<button class="station-btn" onclick=\'selectStation(' + JSON.stringify(s).replace(/'/g, "\\'") + ')\'>'
+    + '<div class="station-icon" style="background:' + s.iconBg + '">' + s.icon + '</div>'
+    + '<div><div class="station-name">' + s.name + '</div>'
+    + '<div class="station-desc">' + s.desc + '</div></div>'
+    + '</button>'
+  ).join('');
+}
+function var_amber_soft() { return '#FEF6E0'; }
+function selectStation(station) {
+  currentStation = station;
+  sessionStorage.setItem('station', JSON.stringify(station));
+  showPanel();
+}
+function changeStation() {
+  if (scanner) { scanner.stop().catch(()=>{}); scanner = null; }
+  currentStation = null;
+  sessionStorage.removeItem('station');
+  showStationSelect();
+}
+// ---- MAIN PANEL ----
+function showPanel() {
+  document.getElementById('pin-screen').style.display = 'none';
+  document.getElementById('station-screen').classList.remove('visible');
+  document.getElementById('panel').classList.add('visible');
+  document.getElementById('panel-station-name').textContent = currentStation.name;
+  nextParticipant();
+}
+// ---- QR SCANNER ----
+function startScanner() {
+  const reader = document.getElementById('qr-reader');
+  const placeholder = document.getElementById('scan-placeholder');
+  reader.style.display = 'block';
+  placeholder.style.display = 'none';
+  scanner = new Html5Qrcode('qr-reader');
+  scanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    onQrScanned,
+    () => {}
+  ).catch(err => {
+    reader.style.display = 'none';
+    placeholder.style.display = 'block';
+    placeholder.querySelector('.scan-hint').textContent = 'Камера недоступна. Введите ID вручную.';
+  });
+}
+function onQrScanned(text) {
+  if (scanner) { scanner.stop().catch(()=>{}); scanner = null; }
+  // Extract ID from URL or raw ID
+  let id = text;
+  try {
+    const url = new URL(text);
+    id = url.searchParams.get('id') || text;
+  } catch (e) {}
+  lookupParticipant(id);
+}
+function manualLookup() {
+  const input = document.getElementById('manual-id');
+  const id = input.value.trim();
+  if (id) lookupParticipant(id);
+}
+// ---- PARTICIPANT LOOKUP ----
+async function lookupParticipant(id) {
+  try {
+    const data = await api('getParticipant', { id: id });
+    if (data.error) {
+      showAlert('warn', 'Участник не найден: ' + id);
+      return;
+    }
+    currentParticipant = data.participant;
+    sessionStats.served++;
+    updateStats();
+    renderProfile();
+  } catch (e) {
+    showAlert('warn', 'Ошибка сети. Попробуйте снова.');
+  }
+}
+function renderProfile() {
+  const p = currentParticipant;
+  const profileEl = document.getElementById('profile');
+  const scannerEl = document.getElementById('scanner-area');
+  scannerEl.style.display = 'none';
+  profileEl.classList.add('visible');
+  // Profile card
+  const initials = p.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  const cardEl = document.getElementById('profile-card');
+  let rows = '';
+  // Card issued
+  rows += profileRow('Карточка для наклеек', p.cardIssued ? 'Выдана' : 'Не выдана', p.cardIssued ? 'done' : 'not');
+  // Current activity status (if activity station)
+  if (currentStation.type === 'activity') {
+    const act = p.activities.find(a => a.id === currentStation.id);
+    if (act) {
+      const status = act.done ? 'Пройдено ' + formatTime(act.doneAt) : 'Не пройдено';
+      const cls = act.done ? 'warn' : 'not';
+      rows += profileRow(currentStation.name, status, cls);
+    }
+  }
+  // Game status (if game station)
+  if (currentStation.type === 'game') {
+    rows += profileRow('Попыток', '' + p.game.attempts, '');
+    rows += profileRow('Лучший счёт', '' + p.game.bestScore, '');
+    rows += profileRow('Монеты', p.game.coinsClaimed ? p.game.coinsEarned + ' (забрал)' : p.game.coinsEarned + ' (не забрал)', p.game.coinsClaimed ? 'done' : 'not');
+  }
+  // Balance
+  rows += profileRow('Общий баланс', p.balance + ' монет', '');
+  // Merch issued
+  if (currentStation.type === 'merch' && p.merchIssued) {
+    rows += profileRow('Уже выдано', p.merchIssued, '');
+  }
+  cardEl.innerHTML = '<div class="profile-top">'
+    + '<div class="profile-avatar">' + initials + '</div>'
+    + '<div><div class="profile-name">' + p.name + '</div>'
+    + '<div class="profile-email">' + p.email + '</div></div>'
+    + '</div>' + rows;
+  // Actions
+  renderActions();
+}
+function profileRow(label, value, cls) {
+  return '<div class="profile-row"><span class="profile-label">' + label
+    + '</span><span class="profile-val ' + cls + '">' + value + '</span></div>';
+}
+function renderActions() {
+  const p = currentParticipant;
+  const el = document.getElementById('actions');
+  let html = '';
+  // Issue card button (always available if not issued)
+  if (!p.cardIssued) {
+    html += '<button class="act-btn secondary" onclick="issueCard()">Выдать карточку для наклеек</button>';
+  }
+  if (currentStation.type === 'activity') {
+    const act = p.activities.find(a => a.id === currentStation.id);
+    if (act && act.done) {
+      html += '<button class="act-btn disabled">Уже выдано ✓</button>';
+      showAlert('warn', 'Этот участник уже проходил «' + currentStation.name + '»');
+      sessionStats.repeats++;
+      updateStats();
+    } else {
+      const coins = (config.activities || []).find(a => a.id === currentStation.id)?.coins || 0;
+      html += '<button class="act-btn primary" onclick="doCompleteActivity()">Выдать наклейки за «' + currentStation.name + '» (+' + coins + ')</button>';
+    }
+  }
+  if (currentStation.type === 'merch') {
+    const items = config.merchItems || [];
+    items.forEach(m => {
+      if (p.balance >= m.cost) {
+        html += '<button class="act-btn merch-btn" onclick="doIssueMerch(\'' + m.id + '\')">' + m.name + ' (' + m.cost + ' монет)</button>';
+      } else {
+        html += '<button class="act-btn merch-disabled">' + m.name + ' (' + m.cost + ' монет) — не хватает</button>';
+      }
+    });
+  }
+  if (currentStation.type === 'game') {
+    html += '<div style="font-size:13px;color:var(--text3);text-align:center;padding:8px">Информационная точка — начисление монет происходит в игре автоматически</div>';
+  }
+  el.innerHTML = html;
+}
+// ---- ACTIONS ----
+async function issueCard() {
+  try {
+    const data = await api('issueCard', { id: currentParticipant.id, staffPin: staffPin });
+    if (data.success) {
+      currentParticipant = data.participant;
+      renderProfile();
+      showAlert('ok', 'Карточка для наклеек выдана!');
+    }
+  } catch (e) {
+    showAlert('warn', 'Ошибка сети');
+  }
+}
+async function doCompleteActivity() {
+  try {
+    const data = await api('completeActivity', {
+      id: currentParticipant.id,
+      activityId: currentStation.id,
+      staffPin: staffPin
+    });
+    if (data.alreadyDone) {
+      showAlert('warn', 'Уже пройдено! Наклейки повторно не выдаём.');
+      sessionStats.repeats++;
+    } else if (data.success) {
+      currentParticipant = data.participant;
+      sessionStats.coins += data.coinsAdded;
+      showAlert('ok', 'Готово! +' + data.coinsAdded + ' монет начислено. Баланс: ' + data.participant.balance);
+    } else {
+      showAlert('warn', data.error || 'Ошибка');
+    }
+    updateStats();
+    renderProfile();
+  } catch (e) {
+    showAlert('warn', 'Ошибка сети');
+  }
+}
+async function doIssueMerch(merchId) {
+  try {
+    const data = await api('issueMerch', {
+      id: currentParticipant.id,
+      merchId: merchId,
+      staffPin: staffPin
+    });
+    if (data.success) {
+      currentParticipant = data.participant;
+      showAlert('ok', 'Выдано: ' + data.merchName + ' (−' + data.cost + ' монет). Остаток: ' + data.participant.balance);
+      renderProfile();
+    } else {
+      showAlert('warn', data.error || 'Ошибка');
+    }
+  } catch (e) {
+    showAlert('warn', 'Ошибка сети');
+  }
+}
+// ---- HELPERS ----
+function nextParticipant() {
+  currentParticipant = null;
+  document.getElementById('profile').classList.remove('visible');
+  document.getElementById('scanner-area').style.display = 'block';
+  hideAlert();
+  // Reset scanner
+  const reader = document.getElementById('qr-reader');
+  const placeholder = document.getElementById('scan-placeholder');
+  reader.style.display = 'none';
+  placeholder.style.display = 'block';
+  placeholder.querySelector('.scan-hint').textContent = 'Нажмите, чтобы открыть камеру';
+  document.getElementById('manual-id').value = '';
+  if (scanner) { scanner.stop().catch(()=>{}); scanner = null; }
+}
+function showAlert(type, msg) {
+  const el = document.getElementById('alert');
+  el.className = 'alert visible ' + type;
+  el.textContent = msg;
+}
+function hideAlert() {
+  document.getElementById('alert').classList.remove('visible');
+}
+function updateStats() {
+  document.getElementById('stat-served').textContent = sessionStats.served;
+  document.getElementById('stat-coins').textContent = sessionStats.coins;
+  document.getElementById('stat-repeat').textContent = sessionStats.repeats;
+}
+function formatTime(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) { return ''; }
+}
+</script>
+</body>
+</html>
