@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Мой паспорт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+:root {
+  --bg: #F6F5F0;
+  --card: #FFFFFF;
+  --text: #1A1A18;
+  --text2: #6B6A65;
+  --text3: #9C9B95;
+  --border: rgba(0,0,0,0.06);
+  --accent: #4A3AFF;
+  --accent-soft: #EEEDFE;
+  --accent-text: #3429B3;
+  --green: #0F6E56;
+  --green-soft: #E1F5EE;
+  --green-text: #085041;
+  --amber: #854F0B;
+  --amber-soft: #FEF6E0;
+  --red: #A32D2D;
+  --red-soft: #FCEBEB;
+  --pink: #993556;
+  --pink-soft: #FBEAF0;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Manrope', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+.container {
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+/* Loading */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80dvh;
+  gap: 16px;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { color: var(--text3); font-size: 14px; }
+/* Error */
+.error-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80dvh;
+  gap: 12px;
+  text-align: center;
+  padding: 32px;
+}
+.error-icon { font-size: 48px; margin-bottom: 8px; }
+.error-title { font-size: 18px; font-weight: 600; }
+.error-desc { font-size: 14px; color: var(--text2); line-height: 1.6; }
+/* Main content */
+.passport { display: none; }
+.passport.visible { display: block; }
+/* Header */
+.p-header {
+  text-align: center;
+  padding: 24px 0 20px;
+}
+.p-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700;
+  margin: 0 auto 12px;
+  letter-spacing: -0.5px;
+}
+.p-name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.p-email {
+  font-size: 13px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+/* QR */
+.p-qr-wrap {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.p-qr-canvas {
+  width: 180px; height: 180px;
+  margin: 0 auto 12px;
+}
+.p-qr-canvas canvas { width: 100% !important; height: 100% !important; }
+.p-qr-hint {
+  font-size: 13px;
+  color: var(--text3);
+}
+/* Balance */
+.p-balance {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.p-bal-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--amber-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.p-bal-num {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.p-bal-label {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.p-bal-detail {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+/* Section */
+.p-section {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 24px 0 10px;
+}
+/* Activities */
+.p-act {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.p-act-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.p-act-item + .p-act-item {
+  border-top: 1px solid var(--border);
+}
+.p-act-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.p-act-dot.done { background: var(--green-soft); color: var(--green); }
+.p-act-dot.pending { background: var(--bg); color: var(--text3); }
+.p-act-body { flex: 1; min-width: 0; }
+.p-act-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+.p-act-status {
+  font-size: 12px;
+  margin-top: 1px;
+}
+.p-act-status.done { color: var(--green); }
+.p-act-status.pending { color: var(--text3); }
+.p-act-coins {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+/* Game card */
+.p-game {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+.p-game-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.p-game-stat {
+  text-align: center;
+}
+.p-game-stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.p-game-stat-label {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+.p-game-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.p-game-btn:active { transform: scale(0.98); }
+.p-game-btn.claim {
+  background: var(--accent);
+  color: #fff;
+}
+.p-game-btn.claim:hover { opacity: 0.9; }
+.p-game-btn.claimed {
+  background: var(--green-soft);
+  color: var(--green-text);
+  pointer-events: none;
+}
+.p-game-btn.play {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  margin-top: 8px;
+}
+.p-game-btn.no-plays {
+  background: var(--accent);
+  color: #fff;
+}
+/* Merch hint */
+.p-merch-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text3);
+  padding: 16px;
+  line-height: 1.6;
+}
+/* Card issued badge */
+.p-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-top: 8px;
+}
+.p-card-badge.issued {
+  background: var(--green-soft);
+  color: var(--green-text);
+}
+.p-card-badge.not-issued {
+  background: var(--bg);
+  color: var(--text3);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Загружаем ваш паспорт...</div>
+  </div>
+  <!-- Error -->
+  <div class="error-screen" id="error">
+    <div class="error-icon">😕</div>
+    <div class="error-title" id="error-title">Паспорт не найден</div>
+    <div class="error-desc" id="error-desc">Проверьте ссылку или зарегистрируйтесь на стенде</div>
+  </div>
+  <!-- Passport -->
+  <div class="passport" id="passport">
+    <div class="p-header">
+      <div class="p-avatar" id="avatar"></div>
+      <div class="p-name" id="name"></div>
+      <div class="p-email" id="email"></div>
+      <div id="card-badge"></div>
+    </div>
+    <div class="p-qr-wrap">
+      <div class="p-qr-canvas" id="qr"></div>
+      <div class="p-qr-hint">Покажите этот QR стендисту</div>
+    </div>
+    <div class="p-balance">
+      <div class="p-bal-icon">🪙</div>
+      <div>
+        <div class="p-bal-num" id="balance">0</div>
+        <div class="p-bal-label">монет на балансе</div>
+        <div class="p-bal-detail" id="bal-detail"></div>
+      </div>
+    </div>
+    <div class="p-section">Активности</div>
+    <div class="p-act" id="activities"></div>
+    <div class="p-section">Онлайн-игра</div>
+    <div class="p-game" id="game-card"></div>
+    <div class="p-section">Мерч</div>
+    <div class="p-merch-hint">Покажите QR на точке мерча, чтобы обменять монеты на подарки 🎁</div>
+  </div>
+</div>
+<script>
+// ============================================================
+// НАСТРОЙКА: вставьте URL вашего Apps Script
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycby-NkEsjwUjfdQnKTxR1FqEEMljgg2PxO2ZhpQ9ZnlxQTOkaeadHQmgzxcPEXw82kI0/exec';
+// Пример: 'https://script.google.com/macros/s/AKfycb.../exec'
+// URL страницы с игрой на Тильде
+const GAME_URL = 'https://usunrise88.github.io/thegame/';
+// Пример: 'https://yoursite.tilda.ws/game'
+// ============================================================
+const params = new URLSearchParams(window.location.search);
+const participantId = params.get('id');
+if (!participantId) {
+  showError('Нет ID участника', 'Отсканируйте QR-код на стенде, чтобы зарегистрироваться');
+} else {
+  loadPassport();
+}
+async function api(action, extra = {}) {
+  const p = new URLSearchParams({ action, ...extra });
+  const res = await fetch(API_URL + '?' + p.toString());
+  return res.json();
+}
+async function loadPassport() {
+  try {
+    const data = await api('getParticipant', { id: participantId });
+    if (data.error) {
+      showError('Паспорт не найден', 'Участник с таким ID не зарегистрирован');
+      return;
+    }
+    renderPassport(data.participant);
+  } catch (e) {
+    showError('Ошибка загрузки', 'Проверьте подключение к интернету и попробуйте обновить страницу');
+  }
+}
+function renderPassport(p) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('passport').classList.add('visible');
+  // Header
+  const initials = p.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  document.getElementById('avatar').textContent = initials;
+  document.getElementById('name').textContent = p.name;
+  document.getElementById('email').textContent = p.email;
+  // Card badge
+  const badgeEl = document.getElementById('card-badge');
+  if (p.cardIssued) {
+    badgeEl.innerHTML = '<span class="p-card-badge issued">✓ Карточка для наклеек получена</span>';
+  } else {
+    badgeEl.innerHTML = '<span class="p-card-badge not-issued">Карточку получите у стендиста</span>';
+  }
+  // QR
+  const qrDiv = document.getElementById('qr');
+  const passUrl = window.location.origin + window.location.pathname + '?id=' + p.id;
+  QRCode.toCanvas(document.createElement('canvas'), passUrl, {
+    width: 360, margin: 0,
+    color: { dark: '#1A1A18', light: '#FFFFFF' }
+  }, function(err, canvas) {
+    if (!err) {
+      qrDiv.innerHTML = '';
+      qrDiv.appendChild(canvas);
+    }
+  });
+  // Balance
+  document.getElementById('balance').textContent = p.balance;
+  const detail = [];
+  if (p.totalEarned > 0) detail.push('заработано ' + p.totalEarned);
+  if (p.totalSpent > 0) detail.push('потрачено ' + p.totalSpent);
+  document.getElementById('bal-detail').textContent = detail.join(' · ');
+  // Activities
+  const actEl = document.getElementById('activities');
+  actEl.innerHTML = p.activities.map(a => {
+    const isDone = a.done;
+    const time = a.doneAt ? formatTime(a.doneAt) : '';
+    return '<div class="p-act-item">'
+      + '<div class="p-act-dot ' + (isDone ? 'done' : 'pending') + '">'
+      + (isDone ? '✓' : '○') + '</div>'
+      + '<div class="p-act-body">'
+      + '<div class="p-act-name">' + a.name + '</div>'
+      + '<div class="p-act-status ' + (isDone ? 'done' : 'pending') + '">'
+      + (isDone ? 'Пройдено в ' + time : 'Не пройдено') + '</div>'
+      + '</div>'
+      + '<div class="p-act-coins">+' + a.coins + '</div>'
+      + '</div>';
+  }).join('');
+  // Game
+  renderGame(p);
+}
+function renderGame(p) {
+  const g = p.game;
+  const el = document.getElementById('game-card');
+  if (g.attempts === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:8px 0">'
+      + '<div style="font-size:15px;color:var(--text2);margin-bottom:16px">Вы ещё не играли</div>'
+      + '<button class="p-game-btn no-plays" onclick="goToGame()">Играть</button>'
+      + '</div>';
+    return;
+  }
+  let btnHtml = '';
+  if (g.coinsClaimed) {
+    btnHtml = '<button class="p-game-btn claimed">Монеты получены ✓</button>';
+  } else if (g.coinsEarned > 0) {
+    btnHtml = '<button class="p-game-btn claim" id="claim-btn" onclick="claimCoins()">Забрать ' + g.coinsEarned + ' монет</button>';
+  }
+  el.innerHTML = '<div class="p-game-stats">'
+    + '<div class="p-game-stat"><div class="p-game-stat-num">' + g.attempts + '</div><div class="p-game-stat-label">попыток</div></div>'
+    + '<div class="p-game-stat"><div class="p-game-stat-num">' + g.bestScore + '</div><div class="p-game-stat-label">лучший счёт</div></div>'
+    + '<div class="p-game-stat"><div class="p-game-stat-num">' + g.coinsEarned + '</div><div class="p-game-stat-label">монет</div></div>'
+    + '</div>'
+    + btnHtml
+    + '<button class="p-game-btn play" onclick="goToGame()">Играть ещё</button>';
+}
+async function claimCoins() {
+  const btn = document.getElementById('claim-btn');
+  btn.textContent = 'Получаем...';
+  btn.style.opacity = '0.7';
+  try {
+    const data = await api('claimGameCoins', { id: participantId });
+    if (data.success) {
+      renderPassport(data.participant);
+    } else if (data.alreadyClaimed) {
+      loadPassport();
+    } else {
+      btn.textContent = 'Ошибка, попробуйте снова';
+      btn.style.opacity = '1';
+    }
+  } catch (e) {
+    btn.textContent = 'Ошибка сети';
+    btn.style.opacity = '1';
+  }
+}
+function goToGame() {
+  window.location.href = GAME_URL + '?id=' + participantId;
+}
+function formatTime(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return '';
+  }
+}
+function showError(title, desc) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error').style.display = 'flex';
+  document.getElementById('error-title').textContent = title;
+  document.getElementById('error-desc').textContent = desc;
+}
+// Auto-refresh every 30 seconds
+setInterval(() => {
+  if (participantId && document.getElementById('passport').classList.contains('visible')) {
+    loadPassport();
+  }
+}, 30000);
+</script>
+</body>
+</html>
